@@ -1,0 +1,171 @@
+import React, { useEffect, useState } from 'react';
+import { Calendar, momentLocalizer, Week } from 'react-big-calendar';
+import moment from 'moment';
+import weekdata from './WeekData.json'
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+
+const localizer = momentLocalizer(moment);
+
+const Weekly = () => {
+  const [events, setEvents] = useState([]);
+  const [legend, setLegend] = useState({}); // Store employee colors in legend
+
+  // const colorList = {};
+  // //define a function to assign colors based on empname
+  // function assignColor(Empname) {
+  //   if (colorList.hasOwnProperty(Empname)) {
+  //     return colorList[Empname];
+  //   }
+  //   else {
+  //     const newColor = generateUniquecolor();
+  //     colorList[Empname] = newColor;
+  //     return newColor;
+  //   }
+  // }
+
+
+  //assignColor(Empname)
+  const predefinedColors = ['orange','brown','darkgoldenrod','deeppink','olive'];
+  function assignedColors (Empname) {
+    if(assignedColors.hasOwnProperty(Empname))
+    {
+      return assignedColors[Empname];
+    }
+    else {
+      const color = predefinedColors.shift();
+      assignedColors[Empname] = color;
+      predefinedColors.push(color);
+      return color;
+    }
+  }
+
+//   weekdata.forEach((dataEntry)) => {
+//   const Empname = dataEntry.Empname;
+//   const color = assignColor(Empname);
+// }
+//console.log('Assigned color ${color} for ${empname}');
+
+useEffect(() => {
+  // Fetch data from your Spring Boot backend and format it
+  //fetch('http://localhost:8082/weeklyEvents')
+
+  // .then((response) => response.json())
+  //.then((data) => {
+  //console.log("RawData",weekdata)
+  const formattedEvents = weekdata.map((event, index) => ({
+    id: index,
+    title: event.onLeave
+      ? `${event.Empname} - ${event.Leavestatus}`
+      : `${event.Empname} - ${event.BackupEvent}`,
+    start: new Date(event.Sdate),
+    end: new Date(event.Edate),
+    color: getColor(event), // Determine the event color based on rules
+    allDay: true,
+  }));
+
+  //console.log("Before events setter",formattedEvents);
+  setEvents(formattedEvents);
+  console.log("After events setter", formattedEvents);
+
+  // Build legend based on employees and colors
+  const employeeLegend = {};
+  weekdata.forEach((event) => {
+    if (!employeeLegend[event.Empname]) {
+      employeeLegend[event.Empname] = getColor(event);
+      console.log(getColor(event));
+    }
+  });
+  setLegend(employeeLegend);
+  // },)
+  //.catch((error) => console.error('Error fetching data:', error));
+}, []);
+
+// Function to determine event color based on rules
+const getColor = (event) => {
+  //console.log("Entered getColor");
+  if (event.onLeave === 'true') {
+    //console.log(event.Leavestatus)
+    if (event.Leavestatus === 'Approved') return 'red';
+    else if (event.Leavestatus === 'Pending') return 'yellow';
+    else if (event.Leavestatus === 'Rejected') return 'purple';
+  } else { //when onleave=false
+
+
+    // Assign a unique color to each team member
+    //but now it is working as follows:
+    //since peter/any first instance of emp with onLeave=False
+    //lands on this method, and their name does not exist in legend
+    //gray gets return as the color property for that emp
+    //for the second instance of the emp, the entry exist in legend
+    //but, since gray was already siigned earlier, the same gets assigned now 
+
+    //TO DO: for the given empname, check if it exists in a colorList
+    //If it does, then return the color assigned to that empname in colorList.
+    //Else, if empname is a new entry in colorList, assign a new color(new color logic).
+    //make sure the return type is a color in the format 'colorname'
+
+
+    //return legend[event.Empname] || 'gray'; //make sure the return type is a color in the format 'colorname'
+    return assignedColors(event.Empname);
+  }
+
+};
+
+function Legend({ events }) {
+  return (
+    <div className="legend">
+      <div className="legend-item">
+        <div className="color-box" style={{ background: "Red" }}></div>
+        <div className="text">Approved Leave</div>
+      </div>
+      <div className="legend-item">
+        <div className="color-box" style={{ background: "Yellow"}}></div>
+        <div className="text">Pending Leave</div>
+      </div>
+      <div className="legend-item">
+        <div className="color-box" style={{ background: "Purple" }}></div>
+        <div className="text">Rejected Leave</div>
+      </div>
+      {/* {events.map((data) => (
+        <div className="legend-item" key={data.Empname}>
+          <div className="color-box" style={{ background: assignedColors(data.Empname) }}></div>
+          <div className="text">{data.Empname}</div>
+        </div>
+      ))} */}
+      <div>
+        {
+          events.map((data,index) => (
+            <Legend key = {index} data={data} />
+          )
+        )}
+ 
+    </div>
+    </div>
+  );
+}
+
+return (
+  <div>
+    <h2>Weekly View</h2>
+    <Calendar
+      localizer={localizer}
+      events={events}
+      startAccessor="start"
+      endAccessor="end"
+      style={{ height: 500 }}
+      eventPropGetter={(event) => ({
+        style: {
+          backgroundColor: event.color,
+        },
+      })}
+    />
+    <div className="legend">
+      <h3>Legend</h3>
+      <Legend weekdata ={weekdata}/>
+      
+  </div>
+  </div>
+);
+};
+
+export default Weekly;
