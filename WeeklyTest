@@ -1,0 +1,105 @@
+import React, { useEffect, useState } from 'react';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+
+const localizer = momentLocalizer(moment);
+
+const predefinedColors = ['orange', 'brown', 'darkgoldenrod', 'deeppink', 'olive'];
+
+const Weekly = () => {
+  const [events, setEvents] = useState([]);
+  const [legend, setLegend] = useState({}); // Store employee colors in legend
+
+  const assignedColors = {}; // Store assigned colors for employees
+
+  useEffect(() => {
+    const weekdata = [
+      // Your weekdata array (replace with your actual data)
+    ];
+
+    const formattedEvents = weekdata.map((event, index) => ({
+      id: index,
+      title: event.onLeave
+        ? `${event.Empname} - ${event.Leavestatus}`
+        : `${event.Empname} - ${event.BackupEvent}`,
+      start: new Date(event.Sdate),
+      end: new Date(event.Edate),
+      color: getColor(event),
+      allDay: true,
+    }));
+
+    setEvents(formattedEvents);
+
+    const employeeLegend = {};
+    weekdata.forEach((event) => {
+      if (!employeeLegend[event.Empname]) {
+        employeeLegend[event.Empname] = getColor(event);
+      }
+    });
+
+    setLegend(employeeLegend);
+  }, []);
+
+  const getColor = (event) => {
+    if (event.onLeave === true) {
+      if (event.Leavestatus === 'Approved') return 'red';
+      else if (event.Leavestatus === 'Pending') return 'yellow';
+      else if (event.Leavestatus === 'Rejected') return 'purple';
+    } else {
+      return assignColor(event.Empname);
+    }
+  };
+
+  const assignColor = (Empname) => {
+    if (assignedColors.hasOwnProperty(Empname)) {
+      return assignedColors[Empname];
+    } else {
+      const color = predefinedColors.shift();
+      assignedColors[Empname] = color;
+      predefinedColors.push(color);
+      return color;
+    }
+  };
+
+  return (
+    <div>
+      <h2>Weekly View</h2>
+      <Calendar
+        localizer={localizer}
+        events={events}
+        startAccessor="start"
+        endAccessor="end"
+        style={{ height: 500 }}
+        eventPropGetter={(event) => ({
+          style: {
+            backgroundColor: event.color,
+          },
+        })}
+      />
+      <div className="legend">
+        <h3>Legend</h3>
+        <div className="legend-item">
+          <div className="color-box" style={{ background: 'red' }}></div>
+          <div className="text">Approved Leave</div>
+        </div>
+        <div className="legend-item">
+          <div className="color-box" style={{ background: 'yellow' }}></div>
+          <div className="text">Pending Leave</div>
+        </div>
+        <div className="legend-item">
+          <div className="color-box" style={{ background: 'purple' }}></div>
+          <div className="text">Rejected Leave</div>
+        </div>
+        {Object.entries(legend).map(([Empname, color]) => (
+          <div className="legend-item" key={Empname}>
+            <div className="color-box" style={{ background: color }}></div>
+            <div className="text">{Empname}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default Weekly;
