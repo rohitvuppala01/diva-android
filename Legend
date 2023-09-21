@@ -1,0 +1,24 @@
+function Legend({ weekdata }) {
+  return (
+    <div className="legend">
+      <div className="legend-item">
+        <div className="color-box" style={{ background: predefinedColors.Approved }}></div>
+        <div className="text">Approved Leave</div>
+      </div>
+      <div className="legend-item">
+        <div className="color-box" style={{ background: predefinedColors.Pending }}></div>
+        <div className="text">Pending Leave</div>
+      </div>
+      <div className="legend-item">
+        <div className="color-box" style={{ background: predefinedColors.Rejected }}></div>
+        <div className="text">Rejected Leave</div>
+      </div>
+      {weekdata.map((data) => (
+        <div className="legend-item" key={data.Empname}>
+          <div className="color-box" style={{ background: assignColor(data.Empname) }}></div>
+          <div className="text">{data.Empname}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
