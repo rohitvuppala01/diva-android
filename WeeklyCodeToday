@@ -1,0 +1,106 @@
+import React, { useEffect, useState } from 'react';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import weekdata from './WeekData.json'
+
+const localizer = momentLocalizer(moment);
+
+const predefinedColors = ['orange', 'brown', 'darkgoldenrod', 'deeppink', 'olive'];
+
+const Weekly = () => {
+  const [events, setEvents] = useState([]);
+  const [legend, setLegend] = useState({}); // Store employee colors in legend
+
+  const assignedColors = {}; // Store assigned colors for employees
+
+  useEffect(() => {
+    axios.get('')
+    .then(response) => {
+    const formattedEvents = weekdata.map((event, index) => ({
+      id: index,
+      title: event.onLeave
+        ? `${event.requestorName} - ${event.entryStatusCode}`
+        : `${event.requestorName} - ${event.entryTypeCode}`,
+      start: new Date(event.startDate),
+      end: new Date(event.endDate),
+      color: getColor(event), // Determine the event color based on rules
+      allDay: true,
+    }));
+
+    setEvents(formattedEvents);
+  })
+  .catch((error)=> console.error('Error Fetching events:',error));
+
+    const employeeLegend = {};
+    weekdata.forEach((event) => {
+      if (!employeeLegend[event.requestorName]) {
+        employeeLegend[event.requestorName] = getColor(event);
+      }
+    });
+
+    setLegend(employeeLegend);
+  }, []);
+
+  const getColor = (event) => {
+    if (event.onLeave === true) {
+      if (event.Leavestatus === 'Approved') return 'red';
+      else if (event.Leavestatus === 'Pending') return 'yellow';
+      else if (event.Leavestatus === 'Rejected') return 'purple';
+    } else {
+      return assignColor(event.requestorName);
+    }
+  };
+
+  const assignColor = (requestorName) => {
+    if (assignedColors.hasOwnProperty(requestorName)) {
+      return assignedColors[requestorName];
+    } else {
+      const color = predefinedColors.shift();
+      assignedColors[requestorName] = color;
+      predefinedColors.push(color);
+      return color;
+    }
+  };
+
+  return (
+    <div>
+      <h2>Add Legend here</h2>
+      <Calendar
+        localizer={localizer}
+        events={events}
+        startAccessor="start"
+        endAccessor="end"
+        style={{ height: 500 }}
+        eventPropGetter={(event) => ({
+          style: {
+            backgroundColor: event.color,
+          },
+        })}
+      />
+      <div className="legend">
+        <h3>Legend</h3>
+        <div className="legend-item">
+          <div className="color-box" style={{ background: 'red', height: "10px", width: "10px" }}>           </div>
+          <div className="text">Approved Leave</div>
+        </div>
+        <div className="legend-item">
+          <div className="color-box" style={{ background: "yellow", height: "10px", width: "10px" }}></div>
+          <div className="text">Pending Leave</div>
+        </div>
+        <div className="legend-item">
+          <div className="color-box" style={{ background: 'purple', height: "10px", width: "10px" }}></div>
+          <div className="text">Rejected Leave</div>
+        </div>
+        {Object.entries(legend).map(([Empname, color]) => (
+          <div className="legend-item" key={Empname}>
+            <div className="color-box" style={{ background: color, height: "10px", width: "10px" }}></div>
+            <div className="text">{Empname}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default Weekly;
