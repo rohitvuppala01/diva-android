@@ -1,0 +1,31 @@
+import React from 'react';
+import { View, Text, Button } from 'react-native'; // Import necessary components from React Native
+import { useNavigation } from '@react-navigation/native'; // Import navigation hook
+
+function MyCalendarScreen() {
+  const navigation = useNavigation(); // Initialize navigation
+
+  return (
+    <View>
+      <Text>My Calendar</Text>
+      <Button
+        title="Home"
+        onPress={() => navigation.navigate('Home')} // Navigate to the 'Home' screen
+      />
+      <Button
+        title="Calendar"
+        onPress={() => navigation.navigate('Calendar')} // Navigate to the 'Calendar' screen
+      />
+      <Button
+        title="HelpDesk"
+        onPress={() => navigation.navigate('HelpDesk')} // Navigate to the 'HelpDesk' screen
+      />
+      <Button
+        title="Logout"
+        onPress={() => navigation.navigate('Logout')} // Navigate to the 'Logout' screen
+      />
+    </View>
+  );
+}
+
+export default MyCalendarScreen;
