@@ -1,0 +1,43 @@
+import React, { PureComponent } from 'react'
+import { SfcShell, SfcShellAppBar, SfcShellAppBarIcon, SfcShellLeftNavV2 } from '@synerg/react-components';
+
+
+export default class
+    extends PureComponent {
+    render() {
+        return (
+            <>
+                {/* <header data-cvs-id={21} className="py-0 px-1000 width:400vw h-auto hidden sm:block"> */}
+                    <SfcShellAppBar data-cvs-id={5} size="small">
+                        My Calendar
+                        <sdf-button data-cvs-id="2242" emphasis="secondary" slot="icons" icon-only="true" icon="home">
+                            Home
+                        </sdf-button>
+
+
+                        <sfc-shell-app-bar-icon data-cvs-id="2113" slot="icons" label="Calendar" icon="action-view-calendar">
+                            Calendar
+                        </sfc-shell-app-bar-icon>
+
+
+                        <sfc-shell-app-bar-icon data-cvs-id="2116" slot="icons" label="Support" icon="action-chat-person">
+                            HelpDesk
+                        </sfc-shell-app-bar-icon>
+
+
+                        <sdf-button data-cvs-id="2241" emphasis="secondary" slot="icons" icon="action-logout" icon-only="false"
+                         icon-placement="after" layout="inline">
+                            Logout
+                        </sdf-button>
+
+
+    
+                        
+                    </SfcShellAppBar>
+                {/* </header> */}
+            </>
+
+
+        )
+    }
+}
