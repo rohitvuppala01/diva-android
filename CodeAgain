@@ -1,0 +1,21 @@
+   // Create green events for dates not covered by red events, starting from today, excluding Sundays and Mondays
+    const transformedGreenEvents = [];
+    const currentDate = moment().startOf('day');
+    const endOfYear = moment().endOf('year');
+    while (currentDate.isBefore(endOfYear)) {
+      const dateString = currentDate.format('YYYY-MM-DD');
+      if (!greenEventDates.includes(dateString) && ![0, 1].includes(currentDate.day())) { // Exclude Sundays (0) and Mondays (1)
+        transformedGreenEvents.push({
+          id: `green-${dateString}`,
+          title: 'Available',
+          start: currentDate.toDate(),
+          end: currentDate.toDate(),
+          color: 'green',
+          allDay: true,
+        });
+      }
+      currentDate.add(1, 'day');
+    }
+    setGreenEvents(transformedGreenEvents);
+  }
+}, [redEvents]);
