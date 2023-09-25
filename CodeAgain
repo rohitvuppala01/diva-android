@@ -1,4 +1,16 @@
-   // Create green events for dates not covered by red events, starting from today, excluding Sundays and Mondays
+useEffect(() => {
+  if (redEvents.length > 0) {
+    const greenEventDates = [];
+    redEvents.forEach((redEvent) => {
+      const startDate = moment(redEvent.start);
+      const endDate = moment(redEvent.end);
+
+      for (let date = startDate; date.isSameOrBefore(endDate); date.add(1, 'day')) {
+        greenEventDates.push(date.format('YYYY-MM-DD'));
+      }
+    });
+
+    // Create green events for dates not covered by red events, starting from today, excluding Sundays and Mondays
     const transformedGreenEvents = [];
     const currentDate = moment().startOf('day');
     const endOfYear = moment().endOf('year');
