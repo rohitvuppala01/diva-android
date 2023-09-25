@@ -1,0 +1,68 @@
+import React, { useState, useEffect } from 'react'; 
+import { Calendar, momentLocalizer } from 'react-big-calendar'; 
+import moment from 'moment'; 
+import 'react-big-calendar/lib/css/react-big-calendar.css'; 
+import axios from 'axios';
+const localizer = momentLocalizer(moment); 
+function CalendarEvent({selectedEmployee}) {
+  const [events, setEvents] = useState([]); 
+  const [redEvents, setRedEvents] = useState([]);
+     
+
+
+axios.get('http://localhost:8082/events/employeeLeaveEvents/'+selectedEmployee.associateOid)
+        .then((response)=>{
+            console.log('Raw Data from backend:', response.data);
+
+
+
+            const transformedRedEvents = response.data.map((event, index) => ({
+                //const [empName, leaveType, sdate, edate] = eventData;
+                    id: index,
+                    title : event.requestorName,
+                    start: new Date(event.startDate) ,
+                    end: new Date(event.endDate),
+                    color: getColor(event),
+                    allDay: true,
+                    
+ 
+            }));
+            setRedEvents(transformedRedEvents);
+            console.log('Fetched Red Events:', transformedRedEvents);
+        }).catch((error)=> console.error('Error fetching data:', error));
+ const getColor = (event) => {
+  
+    if (event.entryStatusCode === 'Approved') return 'red';
+    else if (event.entryStatusCode === 'Pending') return 'yellow';
+    else if (event.entryStatusCode === 'Rejected') return 'purple';
+  else {
+    return 'green';
+  }
+};
+return ( 
+    <div style={{ height: "100vh" , width: "70vw"}}> 
+     {
+      selectedEmployee?(
+        <button className='name'><b><p>Employee: {selectedEmployee.name}</p></b></button>
+        ):(
+           <p>please select an employee</p>
+        )
+    }
+      <Calendar 
+        localizer={localizer} 
+        events={[...events, ...redEvents]} 
+        startAccessor="start" 
+        endAccessor="end" 
+        views={['month', 'week','day']} 
+        defaultView="month"
+        style={{ margin: '20px' }} 
+        eventPropGetter={(event)=> ({
+            style: {
+                backgroundColor: event.color,
+            },
+        })}
+      /> 
+    </div> 
+  ); 
+}
+export default CalendarEvent;
