@@ -1,0 +1,26 @@
+// Function to generate grey events for dates from the start of the year until today (excluding redEvents)
+useEffect(() => {
+  const currentYearStart = moment().startOf('year');
+  const currentDate = moment().startOf('day');
+  const greyEventDates = [];
+
+  while (currentDate.isSameOrBefore(moment(), 'day')) {
+    const dateString = currentDate.format('YYYY-MM-DD');
+    if (!redEvents.some((event) => moment(dateString).isBetween(event.start, event.end, 'day', '[]'))) {
+      greyEventDates.push(dateString);
+    }
+    currentDate.add(1, 'day');
+  }
+
+  // Create grey events for the filtered dates
+  const transformedGreyEvents = greyEventDates.map((dateString) => ({
+    id: `grey-${dateString}`,
+    title: 'Past Day',
+    start: moment(dateString).toDate(),
+    end: moment(dateString).toDate(),
+    color: 'grey',
+    allDay: true,
+  }));
+
+  setGreyEvents(transformedGreyEvents);
+}, [redEvents]);
