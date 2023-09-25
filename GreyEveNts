@@ -1,0 +1,133 @@
+import React, { useState, useEffect } from 'react';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import axios from 'axios';
+
+const localizer = momentLocalizer(moment);
+
+function CalendarEvent({ selectedEmployee }) {
+  const [events, setEvents] = useState([]);
+  const [redEvents, setRedEvents] = useState([]);
+  const [greenEvents, setGreenEvents] = useState([]);
+  const [greyEvents, setGreyEvents] = useState([]);
+
+  useEffect(() => {
+    axios.get('http://localhost:8082/events/employeeLeaveEvents/' + selectedEmployee.associateOid)
+      .then((response) => {
+        console.log('Raw Data from backend:', response.data);
+
+        const transformedRedEvents = response.data.map((event, index) => ({
+          id: index,
+          title: event.requestorName,
+          start: new Date(event.startDate),
+          end: new Date(event.endDate),
+          color: getColor(event),
+          allDay: true,
+        }));
+        setRedEvents(transformedRedEvents);
+        console.log('Fetched Red Events:', transformedRedEvents);
+      })
+      .catch((error) => console.error('Error fetching data:', error));
+  }, [selectedEmployee]);
+
+  // Function to generate green events for all days except those in redEvents
+  useEffect(() => {
+    if (redEvents.length > 0) {
+      const greenEventDates = [];
+      redEvents.forEach((redEvent) => {
+        const startDate = moment(redEvent.start);
+        const endDate = moment(redEvent.end);
+
+        for (let date = startDate; date.isSameOrBefore(endDate); date.add(1, 'day')) {
+          greenEventDates.push(date.format('YYYY-MM-DD'));
+        }
+      });
+
+      // Create green events for dates not covered by red events
+      const transformedGreenEvents = [];
+      const currentDate = moment().startOf('day');
+      while (currentDate.year() === moment().year()) {
+        const dateString = currentDate.format('YYYY-MM-DD');
+        if (!greenEventDates.includes(dateString)) {
+          transformedGreenEvents.push({
+            id: `green-${dateString}`,
+            title: 'Available',
+            start: currentDate.toDate(),
+            end: currentDate.toDate(),
+            color: 'green',
+            allDay: true,
+          });
+        }
+        currentDate.add(1, 'day');
+      }
+      setGreenEvents(transformedGreenEvents);
+    }
+  }, [redEvents]);
+
+  // Function to generate grey events for previous days until the start of the current year
+  useEffect(() => {
+    const currentDate = moment().startOf('day');
+    const currentYearStartDate = moment().startOf('year');
+    const greyEventDates = [];
+
+    while (currentDate.isBefore(currentYearStartDate)) {
+      const dateString = currentDate.format('YYYY-MM-DD');
+      greyEventDates.push(dateString);
+      currentDate.add(1, 'day');
+    }
+
+    // Create grey events for dates not covered by red or green events
+    const transformedGreyEvents = [];
+    greyEventDates.forEach((dateString) => {
+      if (!redEvents.some((event) => moment(dateString).isBetween(event.start, event.end, 'day', '[]'))) {
+        transformedGreyEvents.push({
+          id: `grey-${dateString}`,
+          title: 'Past Day',
+          start: moment(dateString).toDate(),
+          end: moment(dateString).toDate(),
+          color: 'grey',
+          allDay: true,
+        });
+      }
+    });
+
+    setGreyEvents(transformedGreyEvents);
+  }, [redEvents]);
+
+  const getColor = (event) => {
+    if (event.entryStatusCode === 'Approved') return 'red';
+    else if (event.entryStatusCode === 'Pending') return 'yellow';
+    else if (event.entryStatusCode === 'Rejected') return 'purple';
+    else {
+      return 'green';
+    }
+  };
+
+  return (
+    <div style={{ height: "100vh", width: "70vw" }}>
+      {selectedEmployee ? (
+        <button className='name'><b><p>Employee: {selectedEmployee.name}</p></b></button>
+      ) : (
+        <p>please select an employee</p>
+      )}
+
+      <Calendar
+        localizer={localizer}
+        events={[...events, ...redEvents, ...greenEvents, ...greyEvents]}
+        startAccessor="start"
+        endAccessor="end"
+        views={['month', 'week', 'day']}
+        defaultView="month"
+        style={{ margin: '20px' }}
+        eventPropGetter={(event) => ({
+          style: {
+            backgroundColor: event.color,
+          },
+        })}
+      />
+    </div>
+  );
+}
+
+export default CalendarEvent;
