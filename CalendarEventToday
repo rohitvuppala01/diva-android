@@ -169,6 +169,43 @@ useEffect(() => {
     setGreenEvents(transformedGreenEvents);
   }
 }, [redEvents]);
+ const getColor = (event) => {
+    if (event.entryStatusCode === 'Approved') return 'red';
+    else if (event.entryStatusCode === 'Pending') return 'orange';
+    else if (event.entryStatusCode === 'Rejected') return 'purple';
+    else {
+      return 'green';
+    }
+  };
+
+  return (
+    <div style={{ height: "100vh", width: "70vw" }}>
+      {selectedEmployee ? (
+        <button className='name'><b><p>Employee: {selectedEmployee.name}</p></b></button>
+      ) : (
+        <p>please select an employee</p>
+      )}
+
+      <Calendar
+        localizer={localizer}
+        events={[...events, ...redEvents, ...greenEvents, ...greyEvents]}
+        startAccessor="start"
+        endAccessor="end"
+        views={['month', 'week', 'day']}
+        defaultView="month"
+        style={{ margin: '20px' }}
+        eventPropGetter={(event) => ({
+          style: {
+            backgroundColor: event.color,
+          },
+        })}
+      />
+    </div>
+  );
+}
+
+export default CalendarEvent;
+
 
 
 
