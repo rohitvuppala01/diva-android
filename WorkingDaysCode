@@ -1,0 +1,46 @@
+function calculateWorkingAndNonWorkingDays(redEvents) {
+  const currentYear = moment().year();
+  const totalDaysInMonth = moment().daysInMonth();
+  let weekendCount = 0;
+  const currentDate = moment().startOf('month');
+  for (let day = 0; day < totalDaysInMonth; day++) {
+    if ([0, 6].includes(currentDate.day())) {
+      weekendCount++;
+    }
+    currentDate.add(1, 'day');
+  }
+
+  let redEventDays = 0;
+  for (const redEvent of redEvents) {
+    if (
+      moment(redEvent.start).year() === currentYear &&
+      moment(redEvent.start).month() === moment().month()
+    ) {
+      const startDate = moment(redEvent.start);
+      const endDate = moment(redEvent.end);
+
+      for (let date = startDate; date.isSameOrBefore(endDate); date.add(1, 'day')) {
+        if (![0, 6].includes(date.day())) {
+          redEventDays++;
+        }
+      }
+    }
+  }
+
+  const workingDays = totalDaysInMonth - weekendCount - redEventDays;
+  const nonWorkingDays = weekendCount + redEventDays;
+  return { workingDays, nonWorkingDays };
+}
+
+function CalendarEvent({ selectedEmployee }) {
+  // ... Other code in your component ...
+
+  // Calculate working days and non-working days for the current month
+  const { workingDays, nonWorkingDays } = calculateWorkingAndNonWorkingDays(redEvents);
+
+  console.log('Working Days:', workingDays);
+  console.log('Non-Working Days:', nonWorkingDays);
+
+  // ... Rest of your component code ...
+
+}
