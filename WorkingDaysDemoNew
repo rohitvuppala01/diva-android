@@ -1,0 +1,90 @@
+import React, { useState, useEffect } from 'react';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import axios from 'axios';
+
+const localizer = momentLocalizer(moment);
+
+function WorkingDaysDemo({ selectedEmployee }) {
+  const [redEvents, setRedEvents] = useState([]);
+  const [monthlyWorkDays, setMonthlyWorkDays] = useState({});
+
+  useEffect(() => {
+    axios
+      .get('http://localhost:8082/events/employeeLeaveEvents/' + selectedEmployee.associateOid)
+      .then((response) => {
+        const transformedRedEvents = response.data.map((event, index) => ({
+          id: index,
+          title: event.requestorName,
+          start: new Date(event.startDate),
+          end: new Date(event.endDate),
+          color: getColor(event),
+          allDay: true,
+        }));
+        setRedEvents(transformedRedEvents);
+      })
+      .catch((error) => console.error('Error fetching data:', error));
+  }, [selectedEmployee]);
+
+  useEffect(() => {
+    const workDaysByMonth = {};
+
+    for (const redEvent of redEvents) {
+      const startMonth = moment(redEvent.start).format('YYYY-MM');
+      const endMonth = moment(redEvent.end).format('YYYY-MM');
+
+      let currentDate = moment(startMonth, 'YYYY-MM');
+      while (currentDate.isSameOrBefore(endMonth, 'YYYY-MM')) {
+        const monthKey = currentDate.format('YYYY-MM');
+        if (!workDaysByMonth[monthKey]) {
+          workDaysByMonth[monthKey] = 0;
+        }
+
+        const totalDaysInMonth = currentDate.daysInMonth();
+        let weekendCount = 0;
+        const day = moment(currentDate);
+        for (let i = 1; i <= totalDaysInMonth; i++) {
+          if ([0, 6].includes(day.day())) {
+            weekendCount++;
+          }
+          day.add(1, 'day');
+        }
+
+        const redEventStartDate = moment(redEvent.start);
+        const redEventEndDate = moment(redEvent.end);
+        let redEventDays = 0;
+        for (let date = moment(currentDate).startOf('month'); date.isSameOrBefore(currentDate.endOf('month')); date.add(1, 'day')) {
+          if (
+            date.isBetween(redEventStartDate, redEventEndDate, null, '[]') &&
+            ![0, 6].includes(date.day())
+          ) {
+            redEventDays++;
+          }
+        }
+
+        const workDays = totalDaysInMonth - weekendCount - redEventDays;
+        workDaysByMonth[monthKey] += workDays;
+
+        currentDate = currentDate.add(1, 'month');
+      }
+    }
+
+    setMonthlyWorkDays(workDaysByMonth);
+  }, [redEvents]);
+
+  const getColor = (event) => {
+    if (event.entryStatusCode === 'Approved') return 'red';
+    else if (event.entryStatusCode === 'Pending') return 'orange';
+    else if (event.entryStatusCode === 'Rejected') return 'purple';
+    else return 'green';
+  };
+
+  return (
+    <div style={{ height: '100vh', width: '70vw' }}>
+      {/* Render your calendar or other components here */}
+    </div>
+  );
+}
+
+export default WorkingDaysDemo;
